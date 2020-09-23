@@ -5,8 +5,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
-from widgets.msgbox import MsgBox
-from widgets.image_viewer import ImageViewer
+from widgets import *
+
+VALID_FILE_EXTENSIONS = ['.jpg', '.png', '.tiff', '.bmp', '.jpeg', '.gif',
+                         '.pbm', '.pgm', '.ppm', '.xbm', '.xpm']
 
 
 class MainWindow(QMainWindow):
@@ -16,10 +18,28 @@ class MainWindow(QMainWindow):
 
         self.imageViewer = ImageViewer()
 
+        self.load_files()
+
         widget = QWidget()
         layout = QVBoxLayout()
+        layout.addWidget(self.imageViewer)
         widget.setLayout(layout)
-        self.setCentralWidget(widget)
+        self.setCentralWidget(self.imageViewer)
+
+    def load_files(self):
+        self.paths = [str(p) for p in Path("E:/images").glob("*")]
+        self.index = 0 
+        self.imageViewer.display_image(self.paths[self.index])
+
+    def next_path(self):
+        if self.index + 1 <= len(self.paths):
+            self.index += 1
+            self.imageViewer.display_image(self.paths[self.index])
+
+    def previous_path(self):
+        if self.index - 1 >= 0:
+            self.index -= 1 
+            self.imageViewer.display_image(self.paths[self.index])
 
 
 if __name__ == "__main__":
