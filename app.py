@@ -17,29 +17,37 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.imageViewer = ImageViewer()
+        self.msgbox = MsgBox()
+
+        self.bottomBar = BottomBar()
+        self.bottomBar.next.clicked.connect(self.next_path)
+        self.bottomBar.prev.clicked.connect(self.prev_path)
 
         self.load_files()
 
         widget = QWidget()
         layout = QVBoxLayout()
+
         layout.addWidget(self.imageViewer)
+        layout.addWidget(self.bottomBar)
+
         widget.setLayout(layout)
-        self.setCentralWidget(self.imageViewer)
+        self.setCentralWidget(widget)
 
     def load_files(self):
         self.paths = [str(p) for p in Path("E:/images").glob("*")]
-        self.index = 0 
-        self.imageViewer.display_image(self.paths[self.index])
+        self.index = 0
+        self.imageViewer.diplayImage(self.paths[self.index])
 
     def next_path(self):
         if self.index + 1 <= len(self.paths):
             self.index += 1
-            self.imageViewer.display_image(self.paths[self.index])
+            self.imageViewer.diplayImage(self.paths[self.index])
 
-    def previous_path(self):
+    def prev_path(self):
         if self.index - 1 >= 0:
-            self.index -= 1 
-            self.imageViewer.display_image(self.paths[self.index])
+            self.index -= 1
+            self.imageViewer.diplayImage(self.paths[self.index])
 
 
 if __name__ == "__main__":
@@ -51,6 +59,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWindow()
     widget.show()
-    widget.move(500, 200)
+    widget.move(500, 100)
     widget.resize(800, 800)
     app.exec_()

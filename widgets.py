@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 
 
 class ImageViewer(QWidget):
+
     def __init__(self):
         super().__init__()
 
@@ -14,27 +15,33 @@ class ImageViewer(QWidget):
 
         self.setLayout(layout)
 
-    def display_image(self, path):
+    def resizeEvent(self, event):
+        self.view.adjustSize()
+        
+
+    def diplayImage(self, path):
         image = QImage(path)
         if (image.height() > self.view.height()) and (image.width() > self.view.width()):
-            image.scaled(self.view.size())
+            image = image.scaled(self.view.size())
 
         elif image.height() > self.view.height():
-            image.scaledToHeight(self.view.height())
+            image = image.scaledToHeight(self.view.height())
 
         elif image.width() > self.view.width():
-            image.scaledToWidth(self.view.width())
+            image = image.scaledToWidth(self.view.width())
 
+        self.setImage(image)
+        
+
+    def setImage(self, image):
+        self.image = image
         self.view.setPixmap(QPixmap.fromImage(image))
 
 
 class BottomBar(QWidget):
 
-    _next = pyqtSignal()
-    _prev = pyqtSignal()
-
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
 
         self.next = QPushButton('Next')
         self.prev = QPushButton("Previous")
@@ -44,8 +51,11 @@ class BottomBar(QWidget):
         layout.addWidget(self.prev)
         layout.addWidget(self.next)
 
+        self.setLayout(layout)
+
 
 class MsgBox(QWidget):
+
     def __init__(self):
         super().__init__()
 
