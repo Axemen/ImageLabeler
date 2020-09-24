@@ -18,9 +18,9 @@ class ImageViewer(QWidget):
 
         self.setLayout(layout)
 
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         try:
-            self.setImage(self.image)
+            self.setImage()
             self.view.adjustSize()
 
         except AttributeError:
@@ -29,43 +29,61 @@ class ImageViewer(QWidget):
 
     def diplayImage(self, path):
         self.image = QImage(path)
-        self.setImage(self.image)
+        self.setImage()
 
-    def setImage(self, image):
+    def setImage(self):
         self.scaled_image = self.image.scaled(self.view.size())
         self.view.setPixmap(QPixmap.fromImage(self.scaled_image))
 
 
 class BottomBar(QWidget):
 
-    def __init__(self):
+    def __init__(self, ctrl: QWidget):
         super().__init__()
-
-        self.setObjectName("BottomBar")
 
         self.next = QPushButton('Next')
         self.prev = QPushButton("Previous")
 
-        layout = QHBoxLayout()        
+        ctrl.next = self.next
+        ctrl.prev = self.prev
 
-        
-
+        layout = QHBoxLayout()
         layout.addWidget(self.prev)
         layout.addWidget(self.next)
+        self.setLayout(layout)
+
+
+class BinaryControls(QWidget):
+
+    def __init__(self, app: QMainWindow) -> None:
+        super().__init__()
+        self.app = app
+        layout = QVBoxLayout()
+        self.bottomBar = BottomBar(self)
+        self.tagImage = QPushButton("Tag")
+
+        layout.addWidget(self.tagImage)
+        layout.addWidget(self.bottomBar)
 
         self.setLayout(layout)
 
 
 class MsgBox(QWidget):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    def error(self, msg):
-        pass
+    def display(self, msg: str, type: QMessageBox.Icon) -> None:
+        msgbox = QMessageBox()
+        msgbox.setIcon(type)
+        msgbox.setText(msg)
+        msgbox.exec_()
 
-    def warning(self, msg):
-        pass
+    def critical(self, msg: str) -> None:
+        self.display(msg, QMessageBox.Critical)
 
-    def info(self, msg):
-        pass
+    def warning(self, msg: str) -> None:
+        self.display(msg, QMessageBox.Warning)
+
+    def info(self, msg: str) -> None:
+        self.display(msg, QMessageBox.Information)
