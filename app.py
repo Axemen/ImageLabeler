@@ -19,12 +19,13 @@ class MainWindow(QMainWindow):
         self.imageViewer = ImageViewer()
         self.msgbox = MsgBox()
 
-        self.type = 'binary'
-        self.controls = BinaryControls(self)
-        
+        self.type = 'multiclass'
+        self.classes = ['one', 'two', 'three', 'four', 'five', 'six']
+        self.controls = MCControls(self.classes)
+
         self.controls.next.clicked.connect(self.next_path)
         self.controls.prev.clicked.connect(self.prev_path)
-        self.controls.tagImage.clicked.connect(self.on_tagImage)
+        self.controls.tagImage.connect(self.on_tagImage)
 
         self.controls.setMaximumHeight(100)
 
@@ -49,16 +50,36 @@ class MainWindow(QMainWindow):
         if self.index + 1 <= len(self.paths):
             self.index += 1
             self.imageViewer.diplayImage(self.paths[self.index])
+        else:
+            return self.msgbox.error("There is no next")
+
+        if not self.type == 'binary':
+            print("n")
+            self.controls.updateButtons(self.data[self.index])
 
     def prev_path(self):
         if self.index - 1 >= 0:
             self.index -= 1
             self.imageViewer.diplayImage(self.paths[self.index])
 
+        if not self.type == 'binary':
+            print('p')
+            self.controls.updateButtons(self.data[self.index])
+
     def build_data(self):
         if self.type == 'binary':
-            self.data = [{'path':p, 'tagged':0} for p in self.paths]
-        # TODO add other types
+            self.data = [{'path': p, 'tagged': 0} for p in self.paths]
+
+        if self.type == 'multiclass':
+            self.data = [{'path': p, 'class': None} for p in self.paths]
+
+        if self.type == 'multilabel':
+            self.data = []
+            for p in self.paths:
+                d = {'path': p}
+                for c in self.classes:
+                    d[c] = 0
+                self.data.append(d)
 
     def on_tagImage(self):
         if self.type == 'binary':
@@ -67,10 +88,23 @@ class MainWindow(QMainWindow):
             else:
                 self.data[self.index]['tagged'] = 1
 
-        print(self.data[self.index]['tagged'])
+        if self.type == 'multiclass':
+            c = [b.text() for b in self.controls.btn_group.buttons()
+                 if b.isChecked()][0]
+            if c:
+                self.data[self.index]['class'] = c
+            else:
+                self.data[self.index]['class'] = None
+
+        if self.type == 'multilabel':
+            d = {b.text(): int(b.isChecked())
+                 for b in self.controls.btn_group.buttons()}
+            d['path'] = self.data[self.index]['path']
+            self.data[self.index] = d
+
+        print(self.data[self.index])
 
         # TODO add other types
-
 
 
 if __name__ == "__main__":
