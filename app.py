@@ -16,12 +16,16 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        
+
         self.imageViewer = ImageViewer()
         self.msgbox = MsgBox()
 
         self.bottomBar = BottomBar()
         self.bottomBar.next.clicked.connect(self.next_path)
         self.bottomBar.prev.clicked.connect(self.prev_path)
+
+        self.bottomBar.setMaximumHeight(50)
 
         self.load_files()
 

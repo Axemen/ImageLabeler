@@ -11,31 +11,29 @@ class ImageViewer(QWidget):
         layout = QVBoxLayout()
 
         self.view = QLabel()
+        self.view.setMinimumSize(1, 1)
         layout.addWidget(self.view)
+
+        self.view.setStyleSheet("background-color: yellow")
 
         self.setLayout(layout)
 
     def resizeEvent(self, event):
-        self.view.adjustSize()
-        
+        try:
+            self.setImage(self.image)
+            self.view.adjustSize()
+
+        except AttributeError:
+            pass
+        super().resizeEvent(event)
 
     def diplayImage(self, path):
-        image = QImage(path)
-        if (image.height() > self.view.height()) and (image.width() > self.view.width()):
-            image = image.scaled(self.view.size())
-
-        elif image.height() > self.view.height():
-            image = image.scaledToHeight(self.view.height())
-
-        elif image.width() > self.view.width():
-            image = image.scaledToWidth(self.view.width())
-
-        self.setImage(image)
-        
+        self.image = QImage(path)
+        self.setImage(self.image)
 
     def setImage(self, image):
-        self.image = image
-        self.view.setPixmap(QPixmap.fromImage(image))
+        self.scaled_image = self.image.scaled(self.view.size())
+        self.view.setPixmap(QPixmap.fromImage(self.scaled_image))
 
 
 class BottomBar(QWidget):
@@ -43,10 +41,14 @@ class BottomBar(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("BottomBar")
+
         self.next = QPushButton('Next')
         self.prev = QPushButton("Previous")
 
-        layout = QHBoxLayout()
+        layout = QHBoxLayout()        
+
+        
 
         layout.addWidget(self.prev)
         layout.addWidget(self.next)
