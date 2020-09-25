@@ -221,3 +221,19 @@ class MsgBox(QWidget):
 
     def info(self, msg: str) -> None:
         self.display(msg, QMessageBox.Information)
+
+class ClassSelector(QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.form = QFormLayout()
+        self.classes = QLineEdit()
+        self.form.addRow(QLabel("Classes"), self.classes)
+        self.form.addRow(QLabel("Please enter all classes seperated by a ','"))
+        self.submit = QPushButton("Submit")
+        self.form.addRow(self.submit)
+
+        self.setLayout(self.form)
+        self.setGeometry(QRect(100, 100, 400, 100))
+        self.show()
+

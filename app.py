@@ -23,8 +23,6 @@ class MainWindow(QMainWindow):
         self.imageViewer = ImageViewer()
         self.msgbox = MsgBox()
 
-        self.type = 'multiclass'
-        self.classes = ['one', 'two', 'three', 'four', 'five', 'six']
         self.controls = BinaryControls()
 
         self.controls.next.clicked.connect(self.next_path)
@@ -117,10 +115,62 @@ class MainWindow(QMainWindow):
         self.centralWidget().layout().addWidget(self.controls)
 
     def change_to_multi_class(self):
-        pass
+        def init():
+            # Grabbing classes
+            classes = self.selector.classes.text()
+            classes = [c.strip() for c in classes.split(',')]
+
+            # Removing popup
+            sip.delete(self.selector)
+
+            self.centralWidget().layout().removeWidget(self.controls)
+            sip.delete(self.controls)
+            self.imageViewer.resetImage()
+
+            self.controls = MultiClassControls(classes)
+            self.controls.next.clicked.connect(self.next_path)
+            self.controls.prev.clicked.connect(self.prev_path)
+            self.controls.setMaximumHeight(100)
+
+            if hasattr(self, 'paths'):
+                self.controls.buildData(self.paths)
+                self.imageViewer.diplayImage(
+                    self.controls.data[0]['path'])
+
+            self.centralWidget().layout().addWidget(self.controls)
+
+        self.selector = ClassSelector()
+        self.selector.submit.clicked.connect(init)
+
+        
 
     def change_to_multi_label(self):
-        pass
+        def init():
+            # Grabbing classes
+            classes = self.selector.classes.text()
+            classes = [c.strip() for c in classes.split(',')]
+
+            # Removing popup
+            sip.delete(self.selector)
+
+            self.centralWidget().layout().removeWidget(self.controls)
+            sip.delete(self.controls)
+            self.imageViewer.resetImage()
+
+            self.controls = MultiLabelControls(classes)
+            self.controls.next.clicked.connect(self.next_path)
+            self.controls.prev.clicked.connect(self.prev_path)
+            self.controls.setMaximumHeight(100)
+
+            if hasattr(self, 'paths'):
+                self.controls.buildData(self.paths)
+                self.imageViewer.diplayImage(
+                    self.controls.data[0]['path'])
+
+            self.centralWidget().layout().addWidget(self.controls)
+
+        self.selector = ClassSelector()
+        self.selector.submit.clicked.connect(init)
 
 
 if __name__ == "__main__":
