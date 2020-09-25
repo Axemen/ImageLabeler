@@ -1,9 +1,12 @@
+from os import remove
 import sys
 from pathlib import Path
+import json
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+import sip
 
 from widgets import *
 
@@ -15,21 +18,19 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.create_menu()
 
         self.imageViewer = ImageViewer()
         self.msgbox = MsgBox()
 
         self.type = 'multiclass'
         self.classes = ['one', 'two', 'three', 'four', 'five', 'six']
-        self.controls = MCControls(self.classes)
+        self.controls = BinaryControls()
 
         self.controls.next.clicked.connect(self.next_path)
         self.controls.prev.clicked.connect(self.prev_path)
-        self.controls.tagImage.connect(self.on_tagImage)
 
         self.controls.setMaximumHeight(100)
-
-        self.load_files()
 
         widget = QWidget()
         layout = QVBoxLayout()
@@ -42,69 +43,84 @@ class MainWindow(QMainWindow):
 
     def load_files(self):
         self.paths = [str(p) for p in Path("E:/images").glob("*.*")]
-        self.index = 0
-        self.imageViewer.diplayImage(self.paths[self.index])
-        self.build_data()
+        self.controls.buildData(self.paths)
+        self.imageViewer.diplayImage(
+            self.controls.data[self.controls.index]['path'])
 
     def next_path(self):
-        if self.index + 1 <= len(self.paths):
-            self.index += 1
-            self.imageViewer.diplayImage(self.paths[self.index])
+        if self.controls.index + 1 < len(self.controls.data):
+            self.controls.index += 1
+            self.imageViewer.diplayImage(
+                self.controls.data[self.controls.index]['path'])
         else:
-            return self.msgbox.error("There is no next")
+            return self.msgbox.critical("There is no next")
 
-        if not self.type == 'binary':
-            print("n")
-            self.controls.updateButtons(self.data[self.index])
+        self.controls.updateButtons(self.controls.data[self.controls.index])
 
     def prev_path(self):
-        if self.index - 1 >= 0:
-            self.index -= 1
-            self.imageViewer.diplayImage(self.paths[self.index])
+        if self.controls.index - 1 >= 0:
+            self.controls.index -= 1
+            self.imageViewer.diplayImage(
+                self.controls.data[self.controls.index]['path'])
+        else:
+            return self.msgbox.critical("There is no previous")
 
-        if not self.type == 'binary':
-            print('p')
-            self.controls.updateButtons(self.data[self.index])
+        self.controls.updateButtons(self.controls.data[self.controls.index])
 
-    def build_data(self):
-        if self.type == 'binary':
-            self.data = [{'path': p, 'tagged': 0} for p in self.paths]
+    def create_menu(self):
+        file = self.menuBar().addMenu("File")
 
-        if self.type == 'multiclass':
-            self.data = [{'path': p, 'class': None} for p in self.paths]
+        loadData = QAction("Load Images", self)
+        loadData.triggered.connect(self.load_files)
+        file.addAction(loadData)
 
-        if self.type == 'multilabel':
-            self.data = []
-            for p in self.paths:
-                d = {'path': p}
-                for c in self.classes:
-                    d[c] = 0
-                self.data.append(d)
+        exportData = QAction("Export Tags", self)
+        exportData.triggered.connect(self.export_data)
+        file.addAction(exportData)
 
-    def on_tagImage(self):
-        if self.type == 'binary':
-            if self.data[self.index]['tagged']:
-                self.data[self.index]['tagged'] = 0
-            else:
-                self.data[self.index]['tagged'] = 1
+        tagType = self.menuBar().addMenu("Tagger")
 
-        if self.type == 'multiclass':
-            c = [b.text() for b in self.controls.btn_group.buttons()
-                 if b.isChecked()][0]
-            if c:
-                self.data[self.index]['class'] = c
-            else:
-                self.data[self.index]['class'] = None
+        binary = QAction("Binary", self)
+        binary.triggered.connect(self.change_to_binary)
+        tagType.addAction(binary)
 
-        if self.type == 'multilabel':
-            d = {b.text(): int(b.isChecked())
-                 for b in self.controls.btn_group.buttons()}
-            d['path'] = self.data[self.index]['path']
-            self.data[self.index] = d
+        mc = QAction("Multi-Class", self)
+        mc.triggered.connect(self.change_to_multi_class)
+        tagType.addAction(mc)
 
-        print(self.data[self.index])
+        ml = QAction("Multi-Label", self)
+        ml.triggered.connect(self.change_to_multi_label)
+        tagType.addAction(ml)
 
-        # TODO add other types
+    def export_data(self) -> None:
+        path = QFileDialog.getSaveFileName(self, "Save Tags", ".", "(*.json)")
+        if not path:
+            return
+
+        json.dump(self.controls.data, open(path[0], 'w'))
+
+    def change_to_binary(self):
+        self.centralWidget().layout().removeWidget(self.controls)
+        sip.delete(self.controls)
+        self.imageViewer.resetImage()
+
+        self.controls = BinaryControls()
+        self.controls.next.clicked.connect(self.next_path)
+        self.controls.prev.clicked.connect(self.prev_path)
+        self.controls.setMaximumHeight(100)
+
+        if hasattr(self, 'paths'):
+            self.controls.buildData(self.paths)
+            self.imageViewer.diplayImage(
+                self.controls.data[0]['path'])
+
+        self.centralWidget().layout().addWidget(self.controls)
+
+    def change_to_multi_class(self):
+        pass
+
+    def change_to_multi_label(self):
+        pass
 
 
 if __name__ == "__main__":
